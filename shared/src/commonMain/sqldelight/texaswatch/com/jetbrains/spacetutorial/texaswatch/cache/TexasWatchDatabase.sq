@@ -1,0 +1,29 @@
+import kotlin.Boolean;
+
+CREATE TABLE OffenderCache (
+    indIdn      INTEGER NOT NULL PRIMARY KEY,
+    dpsNumber   TEXT NOT NULL,
+    firstName   TEXT NOT NULL,
+    lastName    TEXT NOT NULL,
+    fullName    TEXT NOT NULL,
+    photoUrl    TEXT,
+    address     TEXT,
+    age         INTEGER,
+    detailsUrl  TEXT NOT NULL
+);
+
+insertOffender:
+INSERT OR REPLACE INTO OffenderCache(indIdn, dpsNumber, firstName, lastName, fullName, photoUrl, address, age, detailsUrl)
+VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+selectAllOffenders:
+SELECT * FROM OffenderCache ORDER BY lastName ASC;
+
+selectOffenderById:
+SELECT * FROM OffenderCache WHERE indIdn = ?;
+
+removeAllOffenders:
+DELETE FROM OffenderCache;
+
+countOffenders:
+SELECT COUNT(*) FROM OffenderCache;

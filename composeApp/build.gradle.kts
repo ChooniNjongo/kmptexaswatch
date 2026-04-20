@@ -22,6 +22,10 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.androidx.compose.material3)
+            implementation(libs.koin.androidx.compose)
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
