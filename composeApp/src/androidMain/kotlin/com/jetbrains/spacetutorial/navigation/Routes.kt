@@ -12,5 +12,8 @@ data object OffendersRoute : TopLevelRoute
 data object MapRoute : TopLevelRoute
 
 @Serializable
+data object RouteRoute : TopLevelRoute
+
+@Serializable
 data object SettingsRoute : TopLevelRoute
 

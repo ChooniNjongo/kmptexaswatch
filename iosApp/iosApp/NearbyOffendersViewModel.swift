@@ -40,13 +40,24 @@ final class NearbyOffendersViewModel: NSObject, ObservableObject, CLLocationMana
         }
     }
 
-    func onRadiusChange(_ miles: Double) {
+    // Called on every drag tick — just update the label
+    func onRadiusDrag(_ miles: Double) {
         radiusMiles = miles
-        if locationGranted {
-            offenders = []
-            isListLoading = true
-            fetchPage(page: 0, resetList: true)
-        }
+    }
+
+    // Called when finger lifts — fire the API
+    func onRadiusChangeFinished() {
+        guard locationGranted else { return }
+        offenders = []
+        isListLoading = true
+        fetchPage(page: 0, resetList: true)
+    }
+
+    func refresh() async {
+        guard locationGranted, let lat = userLat, let lon = userLon else { return }
+        pendingPage = 0
+        pendingResetList = true
+        await runPage(lat: lat, lon: lon, page: 0, resetList: true)
     }
 
     func loadNextPage() {

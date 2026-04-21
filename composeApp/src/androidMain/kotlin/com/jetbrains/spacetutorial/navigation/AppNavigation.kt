@@ -21,6 +21,7 @@ import androidx.navigation.compose.rememberNavController
 import com.jetbrains.spacetutorial.MapScreen
 import com.jetbrains.spacetutorial.OffendersSnapAndSearchScreen
 import com.jetbrains.spacetutorial.R
+import com.jetbrains.spacetutorial.RouteScreen
 import com.jetbrains.spacetutorial.SettingsScreen
 import com.jetbrains.spacetutorial.texaswatch.theme.TexasWatchTheme
 
@@ -45,6 +46,12 @@ private val bottomNavItems = listOf(
         iconRes = R.drawable.location_28,
         iconSelectedRes = R.drawable.location_28_fill,
         route = MapRoute,
+    ),
+    NavDestination(
+        label = "Route",
+        iconRes = R.drawable.route_28,
+        iconSelectedRes = R.drawable.route_28_fill,
+        route = RouteRoute,
     ),
     NavDestination(
         label = "Settings",
@@ -117,6 +124,9 @@ fun AppNavigation() {
             }
             composable<MapRoute> {
                 MapScreen()
+            }
+            composable<RouteRoute> {
+                RouteScreen()
             }
             composable<SettingsRoute> {
                 SettingsScreen()

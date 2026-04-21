@@ -10,7 +10,7 @@ struct HomeView: View {
     @State private var selectedTab: Tab = .offenders
 
     enum Tab {
-        case offenders, map, settings
+        case offenders, map, route, settings
     }
 
     var body: some View {
@@ -43,6 +43,20 @@ struct HomeView: View {
                 )
             }
             .tag(Tab.map)
+
+            // ── Route tab ────────────────────────────────────────────────────
+            NavigationStack {
+                RouteView()
+            }
+            .tabItem {
+                Label(
+                    "Route",
+                    systemImage: selectedTab == .route
+                        ? "road.lanes"
+                        : "road.lanes"
+                )
+            }
+            .tag(Tab.route)
 
             // ── Settings tab ─────────────────────────────────────────────────
             NavigationStack {

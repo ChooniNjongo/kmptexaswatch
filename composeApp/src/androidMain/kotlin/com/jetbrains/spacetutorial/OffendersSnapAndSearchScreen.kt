@@ -7,32 +7,49 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.launch
 import com.jetbrains.spacetutorial.texaswatch.entity.OffenderSummary
 import com.jetbrains.spacetutorial.texaswatch.theme.TexasWatchTheme
 import com.jetbrains.spacetutorial.texaswatch.ui.OffenderCard
@@ -45,6 +62,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OffendersSnapAndSearchScreen() {
     val colors = TexasWatchTheme.colors
@@ -77,6 +95,14 @@ fun OffendersSnapAndSearchScreen() {
             .collect { viewModel.loadNextPage() }
     }
 
+    val coroutineScope = rememberCoroutineScope()
+    val showBackToTop by remember { derivedStateOf { listState.firstVisibleItemIndex > 3 } }
+
+    PullToRefreshBox(
+        isRefreshing = state.isLoading && state.offenders.isNotEmpty(),
+        onRefresh = { viewModel.refresh() },
+        modifier = Modifier.fillMaxSize(),
+    ) {
     LazyColumn(
         state = listState,
         modifier = Modifier
@@ -183,7 +209,32 @@ fun OffendersSnapAndSearchScreen() {
                 }
             }
         }
+    } // LazyColumn
+
+    AnimatedVisibility(
+        visible = showBackToTop,
+        enter = fadeIn() + scaleIn(),
+        exit = fadeOut() + scaleOut(),
+        modifier = Modifier
+            .align(Alignment.BottomEnd)
+            .navigationBarsPadding()
+            .padding(16.dp),
+    ) {
+        FloatingActionButton(
+            onClick = { coroutineScope.launch { listState.animateScrollToItem(0) } },
+            shape = CircleShape,
+            containerColor = colors.ringActive,
+            contentColor = colors.invertedText,
+            elevation = FloatingActionButtonDefaults.elevation(6.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Filled.KeyboardArrowUp,
+                contentDescription = "Back to top",
+                modifier = Modifier.size(24.dp),
+            )
+        }
     }
+    } // PullToRefreshBox
 }
 
 private fun haversine(userLat: Double, userLon: Double, offender: OffenderSummary): Double? {

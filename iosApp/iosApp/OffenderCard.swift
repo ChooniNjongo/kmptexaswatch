@@ -5,36 +5,50 @@ import Shared
 
 struct OffenderCard: View {
     let offender: OffenderSummary
+    var distanceMiles: Double? = nil
     @Environment(\.twColors) private var colors
     @Environment(\.twTypography) private var typography
 
     var body: some View {
-        HStack(spacing: 12) {
-            OffenderPhoto(photoUrl: offender.photoUrl, initials: initials)
-                .frame(width: 96, height: 96)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+        ZStack(alignment: .bottomTrailing) {
+            HStack(spacing: 12) {
+                OffenderPhoto(photoUrl: offender.photoUrl, initials: initials)
+                    .frame(width: 96, height: 96)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(offender.fullName)
-                    .font(typography.h3)
-                    .foregroundStyle(colors.primaryText)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(offender.fullName)
+                        .font(typography.h3)
+                        .foregroundStyle(colors.primaryText)
 
-                Text(subtitle)
-                    .font(typography.text2)
-                    .foregroundStyle(colors.secondaryText)
-
-                if let address = offender.address, !address.isEmpty {
-                    Text(address)
+                    Text(subtitle)
                         .font(typography.text2)
                         .foregroundStyle(colors.secondaryText)
-                        .lineLimit(2)
+
+                    if let address = offender.address, !address.isEmpty {
+                        Text(address)
+                            .font(typography.text2)
+                            .foregroundStyle(colors.secondaryText)
+                            .lineLimit(2)
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(12)
+            .background(colors.cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+
+            if let d = distanceMiles {
+                Text(String(format: "%.1f mi", d))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(colors.invertedText)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(colors.ringActive)
+                    .clipShape(Capsule())
+                    .padding(8)
+            }
         }
-        .padding(12)
-        .background(colors.mainBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 0))
     }
 
     private var initials: String {

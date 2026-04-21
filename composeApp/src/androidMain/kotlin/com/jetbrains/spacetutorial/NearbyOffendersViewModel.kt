@@ -67,6 +67,11 @@ class NearbyOffendersViewModel(
         }
     }
 
+    fun refresh() {
+        Log.d(TAG, "refresh: force reload page 0")
+        if (_state.value.locationGranted) fetchPage(page = 0, resetList = true)
+    }
+
     fun checkPermissionAndLoad(granted: Boolean) {
         Log.d(TAG, "checkPermissionAndLoad: granted=$granted")
         _state.value = _state.value.copy(locationGranted = granted)
