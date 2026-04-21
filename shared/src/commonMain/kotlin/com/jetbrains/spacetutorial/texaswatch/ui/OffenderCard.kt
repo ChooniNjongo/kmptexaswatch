@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.SubcomposeAsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
@@ -31,43 +33,61 @@ import com.jetbrains.spacetutorial.texaswatch.theme.TexasWatchTheme
 @Composable
 fun OffenderCard(
     offender: OffenderSummary,
+    distanceMiles: Double? = null,
     onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier
-            .clip(TexasWatchTheme.shapes.medium)
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .background(TexasWatchTheme.colors.cardBackground)
-            .padding(12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        OffenderPhoto(
-            photoUrl = offender.photoUrl,
-            initials = initials(offender.firstName, offender.lastName),
-            modifier = Modifier.size(96.dp),
-        )
-        Column {
-            Text(
-                text = offender.fullName,
-                style = TexasWatchTheme.typography.h3,
-                color = TexasWatchTheme.colors.primaryText,
+    val colors = TexasWatchTheme.colors
+    Box(modifier = modifier) {
+        Row(
+            modifier = Modifier
+                .clip(TexasWatchTheme.shapes.medium)
+                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+                .background(colors.cardBackground)
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            OffenderPhoto(
+                photoUrl = offender.photoUrl,
+                initials = initials(offender.firstName, offender.lastName),
+                modifier = Modifier.size(96.dp),
             )
-            Spacer(Modifier.size(6.dp))
-            Text(
-                text = offenderSubtitle(offender),
-                style = TexasWatchTheme.typography.text2,
-                color = TexasWatchTheme.colors.secondaryText,
-            )
-            Spacer(Modifier.size(4.dp))
-            if (!offender.address.isNullOrBlank()) {
+            Column {
                 Text(
-                    text = offender.address.orEmpty(),
-                    style = TexasWatchTheme.typography.text2,
-                    color = TexasWatchTheme.colors.secondaryText,
+                    text = offender.fullName,
+                    style = TexasWatchTheme.typography.h3,
+                    color = colors.primaryText,
                 )
+                Spacer(Modifier.size(6.dp))
+                Text(
+                    text = offenderSubtitle(offender),
+                    style = TexasWatchTheme.typography.text2,
+                    color = colors.secondaryText,
+                )
+                Spacer(Modifier.size(4.dp))
+                if (!offender.address.isNullOrBlank()) {
+                    Text(
+                        text = offender.address.orEmpty(),
+                        style = TexasWatchTheme.typography.text2,
+                        color = colors.secondaryText,
+                    )
+                }
             }
+        }
+
+        if (distanceMiles != null) {
+            Text(
+                text = "${(distanceMiles * 10).toLong() / 10.0} mi",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.invertedText,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 8.dp, end = 8.dp)
+                    .background(colors.ringActive, RoundedCornerShape(20.dp))
+                    .padding(horizontal = 8.dp, vertical = 3.dp),
+            )
         }
     }
 }

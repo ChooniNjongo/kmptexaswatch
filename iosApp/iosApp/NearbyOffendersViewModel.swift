@@ -6,116 +6,157 @@ import SwiftUI
 final class NearbyOffendersViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
 
     @Published var count: Int = 0
+    @Published var offenders: [OffenderSummary] = []
     @Published var isLoading: Bool = false
+    @Published var isListLoading: Bool = false
+    @Published var isLoadingMore: Bool = false
     @Published var locationGranted: Bool = false
     @Published var radiusMiles: Double = 5.0
+    @Published var userLat: Double? = nil
+    @Published var userLon: Double? = nil
+    @Published var currentPage: Int = 0
+    @Published var totalPages: Int = 0
     @Published var error: String? = nil
 
     private let manager = CLLocationManager()
     private let helper = TexasWatchHelper()
-
-    private var cache: [String: (Int, Date)] = [:]
-    private let cacheTtl: TimeInterval = 600
+    private var activeTask: Task<Void, Never>? = nil
 
     override init() {
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
-        print("[NearbyVM] init — checking auth status")
         checkCurrentAuth()
     }
 
     func requestLocation() {
-        print("[NearbyVM] requestLocation — status: \(manager.authorizationStatus.rawValue)")
         switch manager.authorizationStatus {
         case .notDetermined:
             manager.requestWhenInUseAuthorization()
         case .denied, .restricted:
-            print("[NearbyVM] location denied/restricted — open Settings")
+            break
         default:
-            fetchNearby()
+            fetchPage(page: 0, resetList: true)
         }
     }
 
     func onRadiusChange(_ miles: Double) {
-        print("[NearbyVM] onRadiusChange: \(miles) mi")
         radiusMiles = miles
-        if locationGranted { fetchNearby() }
+        if locationGranted {
+            offenders = []
+            isListLoading = true
+            fetchPage(page: 0, resetList: true)
+        }
+    }
+
+    func loadNextPage() {
+        guard !isLoadingMore, !isListLoading, currentPage + 1 < totalPages else { return }
+        fetchPage(page: currentPage + 1, resetList: false)
     }
 
     // MARK: - CLLocationManagerDelegate
 
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         let status = manager.authorizationStatus
-        print("[NearbyVM] authorizationChanged: \(status.rawValue)")
         Task { @MainActor in
             let granted = status == .authorizedWhenInUse || status == .authorizedAlways
-            locationGranted = granted
-            print("[NearbyVM] locationGranted = \(granted)")
-            if granted { fetchNearby() }
+            self.locationGranted = granted
+            if granted {
+                self.isLoading = true
+                self.isListLoading = true
+                self.fetchPage(page: 0, resetList: true)
+            }
         }
     }
 
     nonisolated func locationManager(_ manager: CLLocationManager,
                                      didUpdateLocations locations: [CLLocation]) {
-        guard let loc = locations.first else {
-            print("[NearbyVM] didUpdateLocations: empty array")
-            return
-        }
-        print("[NearbyVM] didUpdateLocations: lat=\(loc.coordinate.latitude) lon=\(loc.coordinate.longitude)")
+        guard let loc = locations.first else { return }
         let lat = loc.coordinate.latitude
         let lon = loc.coordinate.longitude
         Task { @MainActor in
-            await loadStats(lat: lat, lon: lon)
+            self.userLat = lat
+            self.userLon = lon
+            activeTask?.cancel()
+            activeTask = Task {
+                await self.runPage(lat: lat, lon: lon, page: self.pendingPage, resetList: self.pendingResetList)
+            }
         }
     }
 
     nonisolated func locationManager(_ manager: CLLocationManager,
                                      didFailWithError error: Error) {
-        print("[NearbyVM] locationManager didFail: \(error.localizedDescription)")
         Task { @MainActor in
             self.error = error.localizedDescription
             self.isLoading = false
+            self.isListLoading = false
         }
     }
 
     // MARK: - Private
 
+    private var pendingPage: Int = 0
+    private var pendingResetList: Bool = true
+
     private func checkCurrentAuth() {
         let status = manager.authorizationStatus
-        print("[NearbyVM] checkCurrentAuth: status=\(status.rawValue)")
         locationGranted = status == .authorizedWhenInUse || status == .authorizedAlways
-        if locationGranted { fetchNearby() }
+        if locationGranted {
+            isLoading = true
+            isListLoading = true
+            fetchPage(page: 0, resetList: true)
+        }
     }
 
-    private func fetchNearby() {
-        print("[NearbyVM] fetchNearby — calling requestLocation()")
-        manager.requestLocation()
+    private func fetchPage(page: Int, resetList: Bool) {
+        pendingPage = page
+        pendingResetList = resetList
+
+        // If we already have location, run immediately — no need to re-request
+        if let lat = userLat, let lon = userLon {
+            activeTask?.cancel()
+            activeTask = Task {
+                await runPage(lat: lat, lon: lon, page: page, resetList: resetList)
+            }
+        } else {
+            if page == 0 { isLoading = true; isListLoading = true }
+            manager.requestLocation()
+        }
     }
 
-    private func loadStats(lat: Double, lon: Double) async {
-        let key = String(format: "%.3f,%.3f,%.1f", lat, lon, radiusMiles)
-        print("[NearbyVM] loadStats: key=\(key)")
+    private func runPage(lat: Double, lon: Double, page: Int, resetList: Bool) async {
+        guard !Task.isCancelled else { return }
 
-        if let cached = cache[key], Date().timeIntervalSince(cached.1) < cacheTtl {
-            print("[NearbyVM] loadStats: cache hit count=\(cached.0)")
-            count = cached.0
-            return
+        if page == 0 {
+            isLoading = true
+            isListLoading = true
+            error = nil
+        } else {
+            isLoadingMore = true
         }
 
-        isLoading = true
-        error = nil
-        print("[NearbyVM] loadStats: calling API lat=\(lat) lon=\(lon) radius=\(radiusMiles)")
         do {
-            let stats = try await helper.getRiskStats(lat: lat, lon: lon, radiusMiles: radiusMiles)
-            let total = Int(stats.lowAndModerateCount + stats.highRiskCount)
-            print("[NearbyVM] loadStats: API success low=\(stats.lowAndModerateCount) high=\(stats.highRiskCount) total=\(total)")
-            cache[key] = (total, Date())
-            count = total
+            let result = try await helper.getOffendersPage(
+                lat: lat, lon: lon,
+                radiusMiles: radiusMiles,
+                page: Int32(page),
+                size: Int32(20)
+            )
+            guard !Task.isCancelled else { return }
+            let newOffenders = result.offenders
+            offenders = resetList ? newOffenders : offenders + newOffenders
+            count = Int(result.totalCount)
+            currentPage = page
+            totalPages = Int(result.totalPages)
+            userLat = lat
+            userLon = lon
         } catch {
-            print("[NearbyVM] loadStats: API ERROR \(error)")
+            guard !Task.isCancelled else { return }
+            print("[NearbyVM] ERROR: \(error)")
             self.error = error.localizedDescription
         }
         isLoading = false
+        isListLoading = false
+        isLoadingMore = false
     }
 }

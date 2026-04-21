@@ -15,7 +15,9 @@ data class OffenderSummary(
     @SerialName("photoUrl")     val photoUrl: String?,
     @SerialName("address")      val address: String?,
     @SerialName("age")          val age: Int?,
-    @SerialName("detailsUrl")   val detailsUrl: String
+    @SerialName("detailsUrl")   val detailsUrl: String,
+    val lat: Double? = null,
+    val lon: Double? = null,
 )
 
 // ── Paginated search response ────────────────────────────────────────────────
@@ -133,6 +135,15 @@ data class OffenderSummaryDetail(
 )
 
 // ── Map / radius ─────────────────────────────────────────────────────────────
+
+@Serializable
+data class MapOffenderResponse(
+    @SerialName("content")       val content: List<MapOffender>,
+    @SerialName("page")          val page: Int = 0,
+    @SerialName("size")          val size: Int = 20,
+    @SerialName("totalElements") val totalElements: Long,
+    @SerialName("totalPages")    val totalPages: Int
+)
 
 @Serializable
 data class MapOffender(

@@ -20,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -34,9 +33,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.jetbrains.spacetutorial.texaswatch.theme.TexasWatchTheme
-import kotlinx.coroutines.delay
 
-private const val ANIM_DURATION_MS = 1200L
+private const val ANIM_DURATION_MS = 1200
 
 @Composable
 fun NearbyOffendersCard(
@@ -52,26 +50,18 @@ fun NearbyOffendersCard(
     val ringActive = colors.ringActive
     val ringTrack  = colors.ringTrack
 
-    // Ring animation
-    var animatedTarget by remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(progress) { animatedTarget = progress }
-    val animatedProgress by animateFloatAsState(
-        targetValue = animatedTarget,
-        animationSpec = tween(durationMillis = ANIM_DURATION_MS.toInt()),
-        label = "ringProgress",
+    // Single animated fraction 0→1 drives BOTH ring sweep and count display
+    var fractionTarget by remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(count, locationActive) {
+        fractionTarget = if (locationActive && count > 0) 1f else 0f
+    }
+    val fraction by animateFloatAsState(
+        targetValue = fractionTarget,
+        animationSpec = tween(durationMillis = ANIM_DURATION_MS),
+        label = "fraction",
     )
 
-    // Count animation
-    var displayCount by remember { mutableIntStateOf(0) }
-    LaunchedEffect(count) {
-        if (count == 0) { displayCount = 0; return@LaunchedEffect }
-        val steps = count
-        val intervalMs = ANIM_DURATION_MS / steps.coerceAtLeast(1)
-        for (i in 1..steps) {
-            delay(intervalMs)
-            displayCount = i
-        }
-    }
+    val displayCount = (fraction * count).toInt()
 
     val ringSize = 88.dp
     val strokeWidth = 10.dp
@@ -85,7 +75,7 @@ fun NearbyOffendersCard(
             .padding(20.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // ── Left: text + optional button ──────────────────────────────────────
+        // ── Left ──────────────────────────────────────────────────────────────
         Column(
             verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.weight(1f),
@@ -97,7 +87,6 @@ fun NearbyOffendersCard(
             )
 
             if (!locationActive) {
-                // Show allow location button
                 Button(
                     onClick = onAllowLocation,
                     colors = ButtonDefaults.buttonColors(containerColor = colors.ringActive),
@@ -137,7 +126,7 @@ fun NearbyOffendersCard(
 
         Spacer(modifier = Modifier.size(16.dp))
 
-        // ── Right: donut ring + icon ──────────────────────────────────────────
+        // ── Right: donut ring ─────────────────────────────────────────────────
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -158,11 +147,11 @@ fun NearbyOffendersCard(
                         style      = Stroke(width = stroke, cap = StrokeCap.Round),
                     )
 
-                    if (animatedProgress > 0f) {
+                    if (fraction > 0f) {
                         drawArc(
                             color      = ringActive,
                             startAngle = -90f,
-                            sweepAngle = 360f * animatedProgress,
+                            sweepAngle = 360f * fraction,
                             useCenter  = false,
                             topLeft    = topLeft,
                             size       = arcSize,

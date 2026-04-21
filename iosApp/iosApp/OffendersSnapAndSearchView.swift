@@ -1,36 +1,31 @@
 import SwiftUI
 
-// ── Offenders Snap & Search Screen ───────────────────────────────────────────
-
 struct OffendersSnapAndSearchView: View {
     @Environment(\.twColors) private var colors
     @Environment(\.twTypography) private var typography
     @StateObject private var viewModel = NearbyOffendersViewModel()
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-
-                // ── Nearby Offenders Card ─────────────────────────────────────
+        List {
+            // ── Nearby Offenders Card ─────────────────────────────────────────
+            Section {
                 NearbyOffendersCard(
                     count: viewModel.count,
-                    progress: viewModel.isLoading ? 0 : (viewModel.locationGranted ? 1.0 : 0),
                     locationActive: viewModel.locationGranted,
                     isLoading: viewModel.isLoading,
-                    onAllowLocation: {
-                        if viewModel.locationGranted == false {
-                            viewModel.requestLocation()
-                        }
-                    }
+                    onAllowLocation: { viewModel.requestLocation() }
                 )
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(colors.mainBackground)
+            }
 
-                // ── Radius Slider ─────────────────────────────────────────────
-                if viewModel.locationGranted {
+            // ── Radius Slider ─────────────────────────────────────────────────
+            if viewModel.locationGranted {
+                Section {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(String(format: "%.1f mi radius", viewModel.radiusMiles))
                             .font(typography.text2)
                             .foregroundColor(colors.secondaryText)
-
                         Slider(
                             value: Binding(
                                 get: { viewModel.radiusMiles },
@@ -41,20 +36,47 @@ struct OffendersSnapAndSearchView: View {
                         )
                         .tint(colors.ringActive)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
-                    .padding(.bottom, 16)
+                    .padding(.vertical, 4)
                 }
+                .listRowBackground(colors.mainBackground)
 
-                // Error
-                if let error = viewModel.error {
+                // ── Closest Offenders section ─────────────────────────────────
+                Section {
+                    if viewModel.isListLoading {
+                        ForEach(0..<8, id: \.self) { _ in
+                            ShimmerOffenderCard()
+                                .listRowInsets(EdgeInsets())
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(colors.mainBackground)
+                        }
+                    } else {
+                        ForEach(viewModel.offenders, id: \.indIdn) { offender in
+                            OffenderCard(offender: offender)
+                                .listRowInsets(EdgeInsets())
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(colors.mainBackground)
+                        }
+                    }
+                } header: {
+                    Text("Closest Offenders")
+                        .font(typography.h4)
+                        .foregroundColor(colors.primaryText)
+                        .textCase(nil)
+                }
+            }
+
+            // Error
+            if let error = viewModel.error {
+                Section {
                     Text(error)
                         .font(typography.text2)
                         .foregroundColor(colors.dangerText)
-                        .padding()
                 }
+                .listRowBackground(colors.mainBackground)
             }
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
         .background(colors.mainBackground)
         .navigationTitle("Offenders")
         .navigationBarTitleDisplayMode(.large)

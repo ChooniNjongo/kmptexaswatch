@@ -2,6 +2,9 @@ package com.jetbrains.spacetutorial
 
 import com.jetbrains.spacetutorial.texaswatch.TexasWatchSDK
 import com.jetbrains.spacetutorial.texaswatch.cache.IOSTexasWatchDriverFactory
+import com.jetbrains.spacetutorial.texaswatch.NearbyResult
+import com.jetbrains.spacetutorial.texaswatch.PagedNearbyResult
+import com.jetbrains.spacetutorial.texaswatch.entity.OffenderSearchResponse
 import com.jetbrains.spacetutorial.texaswatch.entity.OffenderSummary
 import com.jetbrains.spacetutorial.texaswatch.entity.RiskStats
 import com.jetbrains.spacetutorial.texaswatch.network.TexasWatchApi
@@ -18,8 +21,25 @@ class TexasWatchHelper : KoinComponent {
     }
 
     @Throws(Exception::class)
+    suspend fun getOffendersByRadius(
+        lat: Double, lon: Double, radiusMiles: Double, page: Int, size: Int
+    ): OffenderSearchResponse {
+        return sdk.getOffendersByRadius(lat, lon, radiusMiles, page, size)
+    }
+
+    @Throws(Exception::class)
     suspend fun getRiskStats(lat: Double, lon: Double, radiusMiles: Double): RiskStats {
         return sdk.getRiskStats(lat = lat, lon = lon, radiusMiles = radiusMiles)
+    }
+
+    @Throws(Exception::class)
+    suspend fun getNearby(lat: Double, lon: Double, radiusMiles: Double, forceReload: Boolean): NearbyResult {
+        return sdk.getNearby(lat = lat, lon = lon, radiusMiles = radiusMiles, forceReload = forceReload)
+    }
+
+    @Throws(Exception::class)
+    suspend fun getOffendersPage(lat: Double, lon: Double, radiusMiles: Double, page: Int, size: Int): PagedNearbyResult {
+        return sdk.getOffendersPage(lat = lat, lon = lon, radiusMiles = radiusMiles, page = page, size = size)
     }
 }
 

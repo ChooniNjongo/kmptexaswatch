@@ -1,5 +1,52 @@
 import kotlin.Boolean;
 
+-- ── Nearby search cache ───────────────────────────────────────────────────────
+
+CREATE TABLE NearbyCache (
+    cacheKey    TEXT NOT NULL PRIMARY KEY,
+    totalCount  INTEGER NOT NULL,
+    cachedAt    INTEGER NOT NULL   -- epoch seconds
+);
+
+CREATE TABLE NearbyCacheOffender (
+    cacheKey    TEXT NOT NULL,
+    indIdn      INTEGER NOT NULL,
+    dpsNumber   TEXT NOT NULL,
+    firstName   TEXT NOT NULL,
+    lastName    TEXT NOT NULL,
+    fullName    TEXT NOT NULL,
+    photoUrl    TEXT,
+    address     TEXT,
+    age         INTEGER,
+    detailsUrl  TEXT NOT NULL,
+    lat         REAL,
+    lon         REAL,
+    PRIMARY KEY (cacheKey, indIdn)
+);
+
+insertNearbyMeta:
+INSERT OR REPLACE INTO NearbyCache(cacheKey, totalCount, cachedAt)
+VALUES(?, ?, ?);
+
+insertNearbyOffender:
+INSERT OR REPLACE INTO NearbyCacheOffender(cacheKey, indIdn, dpsNumber, firstName, lastName, fullName, photoUrl, address, age, detailsUrl, lat, lon)
+VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+selectNearbyMeta:
+SELECT totalCount, cachedAt FROM NearbyCache WHERE cacheKey = ?;
+
+selectNearbyOffenders:
+SELECT indIdn, dpsNumber, firstName, lastName, fullName, photoUrl, address, age, detailsUrl, lat, lon
+FROM NearbyCacheOffender WHERE cacheKey = ? ORDER BY lastName ASC;
+
+deleteNearbyMeta:
+DELETE FROM NearbyCache WHERE cacheKey = ?;
+
+deleteNearbyOffenders:
+DELETE FROM NearbyCacheOffender WHERE cacheKey = ?;
+
+-- ── Offender list cache ───────────────────────────────────────────────────────
+
 CREATE TABLE OffenderCache (
     indIdn      INTEGER NOT NULL PRIMARY KEY,
     dpsNumber   TEXT NOT NULL,
