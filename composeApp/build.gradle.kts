@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.kotlinxSerialization)
 }
 
 kotlin {
@@ -24,6 +25,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.compose.material3)
             implementation(libs.koin.androidx.compose)
+            implementation(libs.androidx.navigation.compose)
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor)
         }

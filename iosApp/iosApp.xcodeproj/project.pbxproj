@@ -8,6 +8,9 @@
 
 /* Begin PBXFileReference section */
 		B9DA97B12DC1472C00A4DA20 /* spacetutorial.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = spacetutorial.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA000001000000000000001A /* jetbrains_sans_bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = jetbrains_sans_bold.ttf; path = jetbrains_sans_bold.ttf; sourceTree = "<group>"; };
+		AA000001000000000000002A /* jetbrains_sans_semibold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = jetbrains_sans_semibold.ttf; path = jetbrains_sans_semibold.ttf; sourceTree = "<group>"; };
+		AA000001000000000000003A /* jetbrains_sans_regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = jetbrains_sans_regular.ttf; path = jetbrains_sans_regular.ttf; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */

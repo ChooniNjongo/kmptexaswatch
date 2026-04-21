@@ -9,7 +9,8 @@ struct iOSApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(viewModel: .init())
+            HomeView()
+                .texasWatchTheme()
         }
     }
 }
