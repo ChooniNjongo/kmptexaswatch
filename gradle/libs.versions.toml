@@ -51,6 +51,8 @@ androidx-compose-material3 = { module = "androidx.compose.material3:material3", 
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "androidx-navigation" }
 coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
+play-services-location = { module = "com.google.android.gms:play-services-location", version = "21.3.0" }
+kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "coroutinesVersion" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

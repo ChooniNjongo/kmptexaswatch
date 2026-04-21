@@ -1,12 +1,13 @@
 import SwiftUI
 
 // ── Nearby Offenders Card ─────────────────────────────────────────────────────
-// Ring fills from 0→progress and count increments from 0→count on appear.
 
 struct NearbyOffendersCard: View {
-    var count: Int = 247
-    var progress: Double = 1.0
-    var locationActive: Bool = true
+    var count: Int = 0
+    var progress: Double = 0
+    var locationActive: Bool = false
+    var isLoading: Bool = false
+    var onAllowLocation: () -> Void = {}
 
     @Environment(\.twColors) private var colors
     @Environment(\.twTypography) private var typography
@@ -21,39 +22,51 @@ struct NearbyOffendersCard: View {
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
 
-            // ── Left: text info ───────────────────────────────────────────────
+            // ── Left ──────────────────────────────────────────────────────────
             VStack(alignment: .leading, spacing: 4) {
                 Text("Nearby Offenders")
                     .font(typography.text2)
                     .foregroundColor(colors.secondaryText)
 
-                HStack(alignment: .lastTextBaseline, spacing: 4) {
-                    Text("\(animatedCount)")
-                        .font(typography.h1)
-                        .foregroundColor(colors.primaryText)
-                        .contentTransition(.numericText())
-                        .animation(.easeInOut(duration: duration), value: animatedCount)
-                    Text("found")
+                if !locationActive {
+                    Button(action: onAllowLocation) {
+                        Text("Allow Location")
+                            .font(typography.label)
+                            .foregroundColor(colors.invertedText)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(colors.ringActive)
+                            .cornerRadius(8)
+                    }
+                    .padding(.top, 4)
+                } else {
+                    HStack(alignment: .lastTextBaseline, spacing: 4) {
+                        Text(isLoading ? "..." : "\(animatedCount)")
+                            .font(typography.h1)
+                            .foregroundColor(colors.primaryText)
+                            .contentTransition(.numericText())
+                            .animation(.easeInOut(duration: duration), value: animatedCount)
+                        if !isLoading {
+                            Text("found")
+                                .font(typography.text2)
+                                .foregroundColor(colors.secondaryText)
+                        }
+                    }
+                    Text("within radius")
                         .font(typography.text2)
                         .foregroundColor(colors.secondaryText)
                 }
-
-                Text("within 5 mile radius")
-                    .font(typography.text2)
-                    .foregroundColor(colors.secondaryText)
             }
 
             Spacer()
 
-            // ── Right: donut ring + icon ──────────────────────────────────────
+            // ── Right: donut ring ─────────────────────────────────────────────
             ZStack {
-                // Track ring
                 Circle()
                     .stroke(colors.ringTrack,
                             style: StrokeStyle(lineWidth: ringStroke, lineCap: .round))
                     .frame(width: ringSize, height: ringSize)
 
-                // Progress arc
                 Circle()
                     .trim(from: 0, to: locationActive ? animatedProgress : 0)
                     .stroke(
@@ -64,7 +77,6 @@ struct NearbyOffendersCard: View {
                     .rotationEffect(.degrees(-90))
                     .animation(.easeInOut(duration: duration), value: animatedProgress)
 
-                // Location pin icon
                 Image(systemName: "location.fill")
                     .font(.system(size: 24, weight: .medium))
                     .foregroundColor(locationActive ? colors.ringActive : colors.ringTrack)
@@ -76,16 +88,30 @@ struct NearbyOffendersCard: View {
         .shadow(color: Color.black.opacity(0.12), radius: 8, x: 0, y: 3)
         .padding(.horizontal, 16)
         .padding(.top, 16)
+        .onChange(of: progress) { newProgress in
+            withAnimation(.easeInOut(duration: duration)) {
+                animatedProgress = newProgress
+            }
+        }
+        .onChange(of: count) { newCount in
+            animatedCount = 0
+            guard newCount > 0 else { return }
+            let interval = duration / Double(newCount)
+            for i in 1...newCount {
+                DispatchQueue.main.asyncAfter(deadline: .now() + interval * Double(i)) {
+                    animatedCount = i
+                }
+            }
+        }
         .onAppear {
-            guard locationActive else { return }
-            // Ring fills up
+            guard locationActive && progress > 0 else { return }
             withAnimation(.easeInOut(duration: duration)) {
                 animatedProgress = progress
             }
-            // Count increments step by step
             let steps = count
-            let interval = duration / Double(max(steps, 1))
-            for i in 1...max(steps, 1) {
+            guard steps > 0 else { return }
+            let interval = duration / Double(steps)
+            for i in 1...steps {
                 DispatchQueue.main.asyncAfter(deadline: .now() + interval * Double(i)) {
                     animatedCount = i
                 }

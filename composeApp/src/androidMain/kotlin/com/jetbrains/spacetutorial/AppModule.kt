@@ -16,4 +16,5 @@ val appModule = module {
         )
     }
     viewModel { OffenderListViewModel(sdk = get()) }
+    viewModel { NearbyOffendersViewModel(application = get(), sdk = get()) }
 }

@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,31 +40,31 @@ private const val ANIM_DURATION_MS = 1200L
 
 @Composable
 fun NearbyOffendersCard(
-    count: Int = 247,
-    progress: Float = 1f,
-    locationActive: Boolean = true,
+    count: Int = 0,
+    progress: Float = 0f,
+    locationActive: Boolean = false,
+    isLoading: Boolean = false,
+    onAllowLocation: () -> Unit = {},
+    onOpenSettings: () -> Unit = {},
 ) {
     val colors = TexasWatchTheme.colors
     val typography = TexasWatchTheme.typography
-
     val ringActive = colors.ringActive
     val ringTrack  = colors.ringTrack
 
-    // ── Ring animation ────────────────────────────────────────────────────────
+    // Ring animation
     var animatedTarget by remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(locationActive) {
-        animatedTarget = if (locationActive) progress else 0f
-    }
+    LaunchedEffect(progress) { animatedTarget = progress }
     val animatedProgress by animateFloatAsState(
         targetValue = animatedTarget,
         animationSpec = tween(durationMillis = ANIM_DURATION_MS.toInt()),
         label = "ringProgress",
     )
 
-    // ── Count animation ───────────────────────────────────────────────────────
+    // Count animation
     var displayCount by remember { mutableIntStateOf(0) }
-    LaunchedEffect(locationActive, count) {
-        if (!locationActive) { displayCount = 0; return@LaunchedEffect }
+    LaunchedEffect(count) {
+        if (count == 0) { displayCount = 0; return@LaunchedEffect }
         val steps = count
         val intervalMs = ANIM_DURATION_MS / steps.coerceAtLeast(1)
         for (i in 1..steps) {
@@ -83,7 +85,7 @@ fun NearbyOffendersCard(
             .padding(20.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // ── Left: text ────────────────────────────────────────────────────────
+        // ── Left: text + optional button ──────────────────────────────────────
         Column(
             verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.weight(1f),
@@ -93,26 +95,44 @@ fun NearbyOffendersCard(
                 style = typography.text2,
                 color = colors.secondaryText,
             )
-            Row(
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
+
+            if (!locationActive) {
+                // Show allow location button
+                Button(
+                    onClick = onAllowLocation,
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.ringActive),
+                    modifier = Modifier.padding(top = 4.dp),
+                ) {
+                    Text(
+                        text = "Allow Location",
+                        style = typography.label,
+                        color = colors.invertedText,
+                    )
+                }
+            } else {
+                Row(
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = if (isLoading) "..." else "$displayCount",
+                        style = typography.h1,
+                        color = colors.primaryText,
+                    )
+                    if (!isLoading) {
+                        Text(
+                            text = "found",
+                            style = typography.text2,
+                            color = colors.secondaryText,
+                        )
+                    }
+                }
                 Text(
-                    text = "$displayCount",
-                    style = typography.h1,
-                    color = colors.primaryText,
-                )
-                Text(
-                    text = "found",
+                    text = "within radius",
                     style = typography.text2,
                     color = colors.secondaryText,
                 )
             }
-            Text(
-                text = "within 5 mile radius",
-                style = typography.text2,
-                color = colors.secondaryText,
-            )
         }
 
         Spacer(modifier = Modifier.size(16.dp))
@@ -128,7 +148,6 @@ fun NearbyOffendersCard(
                     val arcSize = Size(size.width - stroke, size.height - stroke)
                     val topLeft = Offset(inset, inset)
 
-                    // Track
                     drawArc(
                         color      = ringTrack,
                         startAngle = -90f,
@@ -139,7 +158,6 @@ fun NearbyOffendersCard(
                         style      = Stroke(width = stroke, cap = StrokeCap.Round),
                     )
 
-                    // Active arc
                     if (animatedProgress > 0f) {
                         drawArc(
                             color      = ringActive,
