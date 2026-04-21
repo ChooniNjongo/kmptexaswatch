@@ -23,6 +23,7 @@ struct OffendersSnapAndSearchView: View {
     @Environment(\.twTypography) private var typography
     @StateObject private var viewModel = NearbyOffendersViewModel()
     @State private var showBackToTop = false
+    @State private var navigateToSearch = false
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -92,6 +93,26 @@ struct OffendersSnapAndSearchView: View {
                                     .listRowInsets(EdgeInsets())
                                     .listRowSeparator(.hidden)
                                     .listRowBackground(colors.mainBackground)
+                                    .onAppear {
+                                        // Trigger next page when within 5 items of the bottom
+                                        if let last = viewModel.offenders.suffix(5).first,
+                                           last.indIdn == offender.indIdn {
+                                            viewModel.loadNextPage()
+                                        }
+                                    }
+                                }
+                                // ── Load-more spinner ─────────────────────────
+                                if viewModel.isLoadingMore {
+                                    HStack {
+                                        Spacer()
+                                        ProgressView()
+                                            .tint(colors.ringActive)
+                                            .padding(.vertical, 16)
+                                        Spacer()
+                                    }
+                                    .listRowInsets(EdgeInsets())
+                                    .listRowSeparator(.hidden)
+                                    .listRowBackground(colors.mainBackground)
                                 }
                             }
                         } header: {
@@ -116,7 +137,15 @@ struct OffendersSnapAndSearchView: View {
                 .scrollContentBackground(.hidden)
                 .background(colors.mainBackground)
                 .navigationTitle("Offenders")
-                .navigationBarTitleDisplayMode(.large)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        NavigationLink(destination: SearchView()) {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundStyle(colors.primaryText)
+                        }
+                    }
+                }
                 .refreshable {
                     await viewModel.refresh()
                 }

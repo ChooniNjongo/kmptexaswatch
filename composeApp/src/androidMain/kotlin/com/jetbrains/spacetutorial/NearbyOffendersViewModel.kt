@@ -137,12 +137,6 @@ class NearbyOffendersViewModel(
             Log.w(TAG, "lastLocation null, trying getCurrentLocation")
             location = fusedClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, CancellationTokenSource().token).await()
         }
-        if (location == null) {
-            if (android.os.Build.PRODUCT.contains("sdk") || android.os.Build.FINGERPRINT.contains("generic")) {
-                Log.w(TAG, "emulator detected, using Dallas fallback")
-                location = Location("fallback").apply { latitude = 32.7767; longitude = -96.7970 }
-            }
-        }
         return location
     }
 }

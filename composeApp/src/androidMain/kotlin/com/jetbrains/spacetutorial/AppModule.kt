@@ -1,5 +1,8 @@
 package com.jetbrains.spacetutorial
 
+import com.jetbrains.spacetutorial.onboarding.AndroidOnboardingStorage
+import com.jetbrains.spacetutorial.onboarding.OnboardingStorage
+import com.jetbrains.spacetutorial.onboarding.OnboardingViewModel
 import com.jetbrains.spacetutorial.texaswatch.TexasWatchSDK
 import com.jetbrains.spacetutorial.texaswatch.cache.AndroidTexasWatchDriverFactory
 import com.jetbrains.spacetutorial.texaswatch.network.TexasWatchApi
@@ -15,6 +18,8 @@ val appModule = module {
             api = get()
         )
     }
+    single<OnboardingStorage> { AndroidOnboardingStorage(androidContext()) }
+    viewModel { OnboardingViewModel(storage = get()) }
     viewModel { OffenderListViewModel(sdk = get()) }
     viewModel { NearbyOffendersViewModel(application = get(), sdk = get()) }
 }

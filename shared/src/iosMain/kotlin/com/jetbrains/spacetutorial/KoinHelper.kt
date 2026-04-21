@@ -1,5 +1,7 @@
 package com.jetbrains.spacetutorial
 
+import com.jetbrains.spacetutorial.onboarding.IOSOnboardingStorage
+import com.jetbrains.spacetutorial.onboarding.OnboardingStorage
 import com.jetbrains.spacetutorial.texaswatch.TexasWatchSDK
 import com.jetbrains.spacetutorial.texaswatch.cache.IOSTexasWatchDriverFactory
 import com.jetbrains.spacetutorial.texaswatch.NearbyResult
@@ -43,6 +45,13 @@ class TexasWatchHelper : KoinComponent {
     }
 }
 
+class OnboardingHelper : KoinComponent {
+    private val storage: OnboardingStorage by inject<OnboardingStorage>()
+
+    fun isOnboardingComplete(): Boolean = storage.isOnboardingComplete()
+    fun completeOnboarding() = storage.setOnboardingComplete(true)
+}
+
 fun initKoin() {
     startKoin {
         modules(module {
@@ -50,6 +59,7 @@ fun initKoin() {
             single<TexasWatchSDK> {
                 TexasWatchSDK(driverFactory = IOSTexasWatchDriverFactory(), api = get())
             }
+            single<OnboardingStorage> { IOSOnboardingStorage() }
         })
     }
 }

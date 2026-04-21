@@ -53,7 +53,9 @@ import kotlinx.coroutines.launch
 import com.jetbrains.spacetutorial.texaswatch.entity.OffenderSummary
 import com.jetbrains.spacetutorial.texaswatch.theme.TexasWatchTheme
 import com.jetbrains.spacetutorial.texaswatch.ui.OffenderCard
+import com.jetbrains.spacetutorial.R
 import com.jetbrains.spacetutorial.ui.MainHeaderTitleBar
+import com.jetbrains.spacetutorial.ui.TopMenuButton
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import org.koin.androidx.compose.koinViewModel
@@ -64,7 +66,7 @@ import kotlin.math.sqrt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OffendersSnapAndSearchScreen() {
+fun OffendersSnapAndSearchScreen(onSearchClick: () -> Unit = {}) {
     val colors = TexasWatchTheme.colors
     val typography = TexasWatchTheme.typography
     val context = LocalContext.current
@@ -112,7 +114,16 @@ fun OffendersSnapAndSearchScreen() {
     ) {
         // ── Header bar ────────────────────────────────────────────────────────
         item {
-            MainHeaderTitleBar(title = "Offenders")
+            MainHeaderTitleBar(
+                title = "Offenders",
+                endContent = {
+                    TopMenuButton(
+                        iconRes = R.drawable.search_28,
+                        contentDescription = "Search",
+                        onClick = onSearchClick,
+                    )
+                },
+            )
             HorizontalDivider(thickness = 1.dp, color = colors.strokePale)
         }
 
