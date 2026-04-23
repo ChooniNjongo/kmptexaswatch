@@ -132,10 +132,17 @@ class NearbyOffendersViewModel(
 
     @SuppressLint("MissingPermission")
     private suspend fun resolveLocation(): Location? {
-        var location: Location? = fusedClient.lastLocation.await()
+        // Always request a fresh location — lastLocation can be stale (e.g. cached emulator coords)
+        Log.d(TAG, "resolveLocation: requesting fresh getCurrentLocation")
+        var location: Location? = fusedClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, CancellationTokenSource().token).await()
         if (location == null) {
-            Log.w(TAG, "lastLocation null, trying getCurrentLocation")
-            location = fusedClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, CancellationTokenSource().token).await()
+            Log.w(TAG, "resolveLocation: getCurrentLocation null, falling back to lastLocation")
+            location = fusedClient.lastLocation.await()
+        }
+        if (location != null) {
+            Log.d(TAG, "resolveLocation: lat=${location.latitude} lon=${location.longitude} accuracy=${location.accuracy}m provider=${location.provider}")
+        } else {
+            Log.e(TAG, "resolveLocation: FAILED — both getCurrentLocation and lastLocation returned null. Check emulator location settings.")
         }
         return location
     }

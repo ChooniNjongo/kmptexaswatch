@@ -25,8 +25,9 @@ internal object Brand {
     val success    = Color(0xFF388E3C)
     val successDark= Color(0xFF66BB6A)
 
-    // Mint green — proximity ring active color (mirrors Fitbit teal)
-    val mint       = Color(0xFF4ECDC4)
+    // Purple — proximity ring active color (KotlinConf brand purple)
+    val purple     = Color(0xFF8F00E7)
+    val purpleDark = Color(0xFFBF56FF)
 }
 
 internal object UI {

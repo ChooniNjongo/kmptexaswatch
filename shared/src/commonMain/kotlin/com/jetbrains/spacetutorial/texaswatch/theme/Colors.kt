@@ -54,7 +54,7 @@ val TexasWatchLightColors = Colors(
     successBadge      = Brand.success,
     neutralBadge      = UI.grey500,
 
-    ringActive        = Brand.mint,
+    ringActive        = Brand.purple,
     ringTrack         = UI.black15,
 )
 
@@ -82,6 +82,6 @@ val TexasWatchDarkColors = Colors(
     successBadge      = Brand.successDark,
     neutralBadge      = UI.grey400,
 
-    ringActive        = Brand.mint,
+    ringActive        = Brand.purpleDark,
     ringTrack         = UI.white20,
 )
