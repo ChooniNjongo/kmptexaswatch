@@ -47,6 +47,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,6 +62,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
+import com.jetbrains.spacetutorial.texaswatch.entity.TEXAS_COUNTIES
+import com.jetbrains.spacetutorial.texaswatch.entity.TexasCounty
 import com.jetbrains.spacetutorial.texaswatch.theme.TexasWatchTheme
 import com.jetbrains.spacetutorial.ui.MainHeaderSearchBar
 
@@ -113,8 +116,18 @@ fun SearchScreen(onBack: () -> Unit) {
     val colors = TexasWatchTheme.colors
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var filters by remember { mutableStateOf(defaultFilters()) }
+    var selectedCounty by rememberSaveable { mutableStateOf<TexasCounty?>(null) }
+    var showCountySheet by rememberSaveable { mutableStateOf(false) }
 
     BackHandler { onBack() }
+
+    if (showCountySheet) {
+        CountyPickerSheet(
+            selected = selectedCounty,
+            onSelect = { selectedCounty = it; showCountySheet = false },
+            onDismiss = { showCountySheet = false },
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -148,6 +161,8 @@ fun SearchScreen(onBack: () -> Unit) {
                         else it
                     }
                 },
+                selectedCounty = selectedCounty,
+                onCountyClick = { showCountySheet = true },
             )
         }
 
@@ -185,6 +200,8 @@ fun SearchScreen(onBack: () -> Unit) {
 private fun FilterPanel(
     filters: List<FilterChip>,
     onToggle: (FilterChip) -> Unit,
+    selectedCounty: TexasCounty?,
+    onCountyClick: () -> Unit,
 ) {
     val colors = TexasWatchTheme.colors
     val typography = TexasWatchTheme.typography
@@ -238,8 +255,44 @@ private fun FilterPanel(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 16.dp),
             ) {
-                /// I Want to add a dropmdwn nto select counties can you add for me
-
+                // County picker row
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "County",
+                        style = typography.text2,
+                        color = colors.secondaryText,
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .border(1.dp, colors.strokeFull, RoundedCornerShape(8.dp))
+                            .background(colors.mainBackground)
+                            .clickable(onClick = onCountyClick)
+                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = selectedCounty?.name?.let { it.lowercase().replaceFirstChar { c -> c.uppercase() } }
+                                    ?: "Select a county",
+                                style = typography.text2,
+                                color = if (selectedCounty != null) colors.primaryText else colors.secondaryText,
+                            )
+                            Icon(
+                                painter = painterResource(R.drawable.arrow_left_24),
+                                contentDescription = "Open county picker",
+                                tint = colors.secondaryText,
+                                modifier = Modifier
+                                    .size(18.dp)
+                                    .rotate(-90f),
+                            )
+                        }
+                    }
+                }
 
                 FilterGroup(
                     title = "Offender Level",
@@ -296,6 +349,109 @@ private fun FilterGroup(
 }
 
 // ── Single filter chip tag ────────────────────────────────────────────────────
+
+// ── County picker bottom sheet ────────────────────────────────────────────────
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CountyPickerSheet(
+    selected: TexasCounty?,
+    onSelect: (TexasCounty) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val colors = TexasWatchTheme.colors
+    val typography = TexasWatchTheme.typography
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var query by rememberSaveable { mutableStateOf("") }
+    val filtered by remember {
+        derivedStateOf {
+            if (query.isBlank()) TEXAS_COUNTIES
+            else TEXAS_COUNTIES.filter { it.name.contains(query.trim(), ignoreCase = true) }
+        }
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = colors.surfaceBackground,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = "Select County",
+                style = typography.h4,
+                color = colors.primaryText,
+            )
+
+            // Search field
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .border(1.dp, colors.strokeFull, RoundedCornerShape(8.dp))
+                    .background(colors.mainBackground)
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+            ) {
+                BasicTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    singleLine = true,
+                    textStyle = typography.text2.copy(color = colors.primaryText),
+                    cursorBrush = SolidColor(colors.primaryAccent),
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        imeAction = ImeAction.Search,
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    decorationBox = { inner ->
+                        if (query.isEmpty()) {
+                            Text(
+                                text = "Search counties…",
+                                style = typography.text2,
+                                color = colors.secondaryText,
+                            )
+                        }
+                        inner()
+                    },
+                )
+            }
+
+            LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
+                items(filtered, key = { it.code }) { county ->
+                    val isSelected = county.code == selected?.code
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(county) }
+                            .padding(vertical = 14.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = county.name.lowercase().replaceFirstChar { it.uppercase() },
+                            style = typography.text2,
+                            color = if (isSelected) colors.primaryAccent else colors.primaryText,
+                        )
+                        if (isSelected) {
+                            Icon(
+                                painter = painterResource(R.drawable.arrow_left_24),
+                                contentDescription = null,
+                                tint = colors.primaryAccent,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    }
+                    HorizontalDivider(thickness = 0.5.dp, color = colors.strokePale)
+                }
+            }
+        }
+    }
+}
 
 private val ChipShape = RoundedCornerShape(8.dp)
 

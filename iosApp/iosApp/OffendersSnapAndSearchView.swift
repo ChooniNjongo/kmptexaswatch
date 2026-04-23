@@ -140,7 +140,7 @@ struct OffendersSnapAndSearchView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        NavigationLink(destination: SearchView()) {
+                        NavigationLink(destination: SearchFilterView()) {
                             Image(systemName: "magnifyingglass")
                                 .foregroundStyle(colors.primaryText)
                         }

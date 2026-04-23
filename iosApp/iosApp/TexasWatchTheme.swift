@@ -14,7 +14,6 @@ private enum Brand {
     static let dangerDark = Color(hex: 0xFF6659)
     static let success    = Color(hex: 0x388E3C)
     static let successDark = Color(hex: 0x66BB6A)
-    static let mint    = Color(hex: 0x4ECDC4)
 }
 
 private enum UI {
@@ -79,7 +78,7 @@ let TexasWatchLightColors = TexasWatchColors(
     dangerBadge:       Brand.danger,
     successBadge:      Brand.success,
     neutralBadge:      UI.grey500,
-    ringActive:        Brand.mint,
+    ringActive:        Brand.navy100,
     ringTrack:         UI.black15
 )
 
@@ -101,7 +100,7 @@ let TexasWatchDarkColors = TexasWatchColors(
     dangerBadge:       Brand.dangerDark,
     successBadge:      Brand.successDark,
     neutralBadge:      UI.grey400,
-    ringActive:        Brand.mint,
+    ringActive:        Brand.navy80,
     ringTrack:         UI.white20
 )
 
