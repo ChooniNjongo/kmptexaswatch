@@ -51,6 +51,37 @@ struct OffendersSnapAndSearchView: View {
                         .listRowBackground(colors.mainBackground)
                     }
 
+                    // ── Scan Contacts ─────────────────────────────────────────
+                    Section {
+                        NavigationLink(destination: ContactScanView()) {
+                            HStack(spacing: 12) {
+                                Image(systemName: "person.crop.circle.badge.magnifyingglass")
+                                    .font(.system(size: 20, weight: .semibold))
+                                    .foregroundStyle(colors.primaryAccent)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Scan My Contacts")
+                                        .font(typography.h4)
+                                        .foregroundStyle(colors.primaryAccent)
+                                    Text("Check if any contacts match offenders")
+                                        .font(typography.text2)
+                                        .foregroundStyle(colors.secondaryText)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(colors.secondaryText)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 14)
+                            .frame(maxWidth: .infinity)
+                            .background(colors.primaryAccent.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+                        }
+                        .buttonStyle(.plain)
+                        .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12))
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(colors.mainBackground)
+                    }
+
                     // ── Radius Slider ─────────────────────────────────────────
                     if viewModel.locationGranted {
                         Section {
@@ -86,10 +117,13 @@ struct OffendersSnapAndSearchView: View {
                                 }
                             } else {
                                 ForEach(viewModel.offenders, id: \.indIdn) { offender in
-                                    OffenderCard(
-                                        offender: offender,
-                                        distanceMiles: haversine(userLat: viewModel.userLat, userLon: viewModel.userLon, offender: offender)
-                                    )
+                                    let dist = haversine(userLat: viewModel.userLat, userLon: viewModel.userLon, offender: offender)
+                                    NavigationLink(destination: OffenderDetailView(indIdn: Int(offender.indIdn), offenderName: offender.fullName, distanceMiles: dist)) {
+                                        OffenderCard(
+                                            offender: offender,
+                                            distanceMiles: dist
+                                        )
+                                    }
                                     .listRowInsets(EdgeInsets())
                                     .listRowSeparator(.hidden)
                                     .listRowBackground(colors.mainBackground)

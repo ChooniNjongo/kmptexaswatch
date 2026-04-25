@@ -2,6 +2,7 @@ package com.jetbrains.spacetutorial.texaswatch
 
 import com.jetbrains.spacetutorial.texaswatch.cache.TexasWatchCache
 import com.jetbrains.spacetutorial.texaswatch.cache.TexasWatchDriverFactory
+import com.jetbrains.spacetutorial.texaswatch.entity.ContactScanResponse
 import com.jetbrains.spacetutorial.texaswatch.entity.MapOffender
 import com.jetbrains.spacetutorial.texaswatch.entity.MapOffenderResponse
 import com.jetbrains.spacetutorial.texaswatch.entity.OffenderDetail
@@ -57,6 +58,13 @@ class TexasWatchSDK(
         return api.getRiskStats(lat, lon, radiusMiles)
     }
 
+    @Throws(Exception::class)
+    suspend fun getOffendersByRadiusForMap(
+        lat: Double, lon: Double, radiusMiles: Double, page: Int = 0, size: Int = 50
+    ): MapOffenderResponse {
+        return api.getOffendersByRadiusForMap(lat, lon, radiusMiles, page, size)
+    }
+
     /**
      * Returns a [NearbyResult] for the given location/radius.
      * If [forceReload] is false and a fresh cache entry exists, returns it immediately.
@@ -90,6 +98,37 @@ class TexasWatchSDK(
         }
         cache.saveNearby(key, total, offenders)
         return NearbyResult(total, offenders, fromCache = false)
+    }
+
+    /**
+     * Comprehensive offender search — all filters, live results, paginated.
+     */
+    @Throws(Exception::class)
+    suspend fun searchComprehensive(
+        name: String? = null,
+        countyName: String? = null,
+        riskLevels: List<String>? = null,
+        races: List<String>? = null,
+        hairColors: List<String>? = null,
+        eyeColors: List<String>? = null,
+        page: Int = 0,
+        size: Int = 20,
+    ): OffenderSearchResponse {
+        return api.searchComprehensive(
+            name = name,
+            countyName = countyName,
+            riskLevels = riskLevels,
+            races = races,
+            hairColors = hairColors,
+            eyeColors = eyeColors,
+            page = page,
+            size = size,
+        )
+    }
+
+    @Throws(Exception::class)
+    suspend fun searchByContacts(names: List<String>): ContactScanResponse {
+        return api.searchByContacts(names)
     }
 
     /**

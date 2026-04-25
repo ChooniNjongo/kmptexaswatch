@@ -29,6 +29,8 @@ kotlin {
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor)
             implementation(libs.play.services.location)
+            implementation(libs.play.services.maps)
+            implementation(libs.maps.compose)
             implementation(libs.kotlinx.coroutines.play.services)
         }
         commonMain.dependencies {

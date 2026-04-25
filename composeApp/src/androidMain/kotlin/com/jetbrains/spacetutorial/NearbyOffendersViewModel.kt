@@ -75,7 +75,10 @@ class NearbyOffendersViewModel(
     fun checkPermissionAndLoad(granted: Boolean) {
         Log.d(TAG, "checkPermissionAndLoad: granted=$granted")
         _state.value = _state.value.copy(locationGranted = granted)
-        if (granted) fetchPage(page = 0, resetList = true)
+        // Only load if we have no data yet — avoids reload every time user navigates back
+        if (granted && _state.value.offenders.isEmpty() && !_state.value.isLoading) {
+            fetchPage(page = 0, resetList = true)
+        }
     }
 
     fun loadNextPage() {

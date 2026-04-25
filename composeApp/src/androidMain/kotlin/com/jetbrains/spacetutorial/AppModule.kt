@@ -8,6 +8,7 @@ import com.jetbrains.spacetutorial.texaswatch.cache.AndroidTexasWatchDriverFacto
 import com.jetbrains.spacetutorial.texaswatch.network.TexasWatchApi
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
+import org.koin.core.parameter.parametersOf
 import org.koin.dsl.module
 
 val appModule = module {
@@ -22,4 +23,6 @@ val appModule = module {
     viewModel { OnboardingViewModel(storage = get()) }
     viewModel { OffenderListViewModel(sdk = get()) }
     viewModel { NearbyOffendersViewModel(application = get(), sdk = get()) }
+    viewModel { SearchViewModel(sdk = get()) }
+    viewModel { (indIdn: Int) -> OffenderDetailViewModel(sdk = get(), indIdn = indIdn) }
 }

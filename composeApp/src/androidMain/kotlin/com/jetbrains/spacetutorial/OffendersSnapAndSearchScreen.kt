@@ -13,7 +13,11 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,9 +48,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.launch
@@ -58,6 +69,8 @@ import com.jetbrains.spacetutorial.ui.MainHeaderTitleBar
 import com.jetbrains.spacetutorial.ui.TopMenuButton
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import org.koin.androidx.compose.koinViewModel
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -66,11 +79,12 @@ import kotlin.math.sqrt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OffendersSnapAndSearchScreen(onSearchClick: () -> Unit = {}) {
+fun OffendersSnapAndSearchScreen(onSearchClick: () -> Unit = {}, onOffender: (Int, Double?) -> Unit = { _, _ -> }, onScanContacts: () -> Unit = {}) {
     val colors = TexasWatchTheme.colors
     val typography = TexasWatchTheme.typography
     val context = LocalContext.current
-    val viewModel: NearbyOffendersViewModel = koinViewModel()
+    val activity = LocalActivity.current as ComponentActivity
+    val viewModel: NearbyOffendersViewModel = koinViewModel(viewModelStoreOwner = activity)
     val state by viewModel.state.collectAsState()
     val listState = rememberLazyListState()
 
@@ -145,6 +159,38 @@ fun OffendersSnapAndSearchScreen(onSearchClick: () -> Unit = {}) {
             )
         }
 
+        // ── Scan Contacts card ────────────────────────────────────────────────
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(colors.primaryAccent.copy(alpha = 0.08f))
+                    .clickable { onScanContacts() }
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.team_28),
+                    contentDescription = null,
+                    tint = colors.primaryAccent,
+                    modifier = Modifier.size(22.dp),
+                )
+                Column(Modifier.weight(1f)) {
+                    Text("Scan My Contacts", style = typography.h4, color = colors.primaryAccent)
+                    Text("Check if any contacts match offenders", style = typography.text2, color = colors.secondaryText)
+                }
+                Icon(
+                    painter = painterResource(R.drawable.arrow_left_24),
+                    contentDescription = null,
+                    tint = colors.secondaryText,
+                    modifier = Modifier.size(16.dp).rotate(180f),
+                )
+            }
+        }
+
         // ── Radius Slider ─────────────────────────────────────────────────────
         if (state.locationGranted) {
             item {
@@ -193,10 +239,12 @@ fun OffendersSnapAndSearchScreen(onSearchClick: () -> Unit = {}) {
                 val userLat = state.userLat
                 val userLon = state.userLon
                 itemsIndexed(state.offenders, key = { _, o -> o.indIdn }) { _, offender ->
+                    val dist = if (userLat != null && userLon != null)
+                        haversine(userLat, userLon, offender) else null
                     OffenderCard(
                         offender = offender,
-                        distanceMiles = if (userLat != null && userLon != null)
-                            haversine(userLat, userLon, offender) else null,
+                        distanceMiles = dist,
+                        onClick = { onOffender(offender.indIdn, dist) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 6.dp),

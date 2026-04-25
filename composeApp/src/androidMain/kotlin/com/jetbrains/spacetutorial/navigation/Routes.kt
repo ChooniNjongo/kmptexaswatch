@@ -27,3 +27,9 @@ data object RouteRoute : TopLevelRoute
 @Serializable
 data object SettingsRoute : TopLevelRoute
 
+@Serializable
+data class OffenderDetailRoute(val indIdn: Int, val distanceMiles: Double = -1.0)
+
+@Serializable
+data object ContactScanRoute
+

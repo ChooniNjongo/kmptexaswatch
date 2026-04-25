@@ -6,6 +6,10 @@ import com.jetbrains.spacetutorial.texaswatch.TexasWatchSDK
 import com.jetbrains.spacetutorial.texaswatch.cache.IOSTexasWatchDriverFactory
 import com.jetbrains.spacetutorial.texaswatch.NearbyResult
 import com.jetbrains.spacetutorial.texaswatch.PagedNearbyResult
+import com.jetbrains.spacetutorial.texaswatch.entity.ContactScanResponse
+import com.jetbrains.spacetutorial.texaswatch.entity.MapOffender
+import com.jetbrains.spacetutorial.texaswatch.entity.MapOffenderResponse
+import com.jetbrains.spacetutorial.texaswatch.entity.OffenderDetail
 import com.jetbrains.spacetutorial.texaswatch.entity.OffenderSearchResponse
 import com.jetbrains.spacetutorial.texaswatch.entity.OffenderSummary
 import com.jetbrains.spacetutorial.texaswatch.entity.RiskStats
@@ -43,6 +47,46 @@ class TexasWatchHelper : KoinComponent {
     suspend fun getOffendersPage(lat: Double, lon: Double, radiusMiles: Double, page: Int, size: Int): PagedNearbyResult {
         return sdk.getOffendersPage(lat = lat, lon = lon, radiusMiles = radiusMiles, page = page, size = size)
     }
+
+    @Throws(Exception::class)
+    suspend fun getOffendersForMap(
+        lat: Double, lon: Double, radiusMiles: Double, page: Int, size: Int
+    ): MapOffenderResponse {
+        return sdk.getOffendersByRadiusForMap(lat, lon, radiusMiles, page, size)
+    }
+
+    @Throws(Exception::class)
+    suspend fun getOffenderDetail(indIdn: Int): OffenderDetail {
+        return sdk.getOffenderDetail(indIdn)
+    }
+
+    @Throws(Exception::class)
+    suspend fun searchByContacts(names: List<String>): ContactScanResponse {
+        return sdk.searchByContacts(names)
+    }
+
+    @Throws(Exception::class)
+    suspend fun searchComprehensive(
+        name: String?,
+        countyName: String?,
+        riskLevels: List<String>?,
+        races: List<String>?,
+        hairColors: List<String>?,
+        eyeColors: List<String>?,
+        page: Int,
+        size: Int,
+    ): OffenderSearchResponse {
+        return sdk.searchComprehensive(
+            name = name,
+            countyName = countyName,
+            riskLevels = riskLevels,
+            races = races,
+            hairColors = hairColors,
+            eyeColors = eyeColors,
+            page = page,
+            size = size,
+        )
+    }
 }
 
 class OnboardingHelper : KoinComponent {
@@ -55,7 +99,7 @@ class OnboardingHelper : KoinComponent {
 fun initKoin() {
     startKoin {
         modules(module {
-            single<TexasWatchApi> { TexasWatchApi(baseUrl = "http://192.168.1.141:8080") }
+            single<TexasWatchApi> { TexasWatchApi(baseUrl = "http://localhost:8080") }
             single<TexasWatchSDK> {
                 TexasWatchSDK(driverFactory = IOSTexasWatchDriverFactory(), api = get())
             }

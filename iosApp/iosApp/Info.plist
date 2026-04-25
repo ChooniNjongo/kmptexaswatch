@@ -11,6 +11,8 @@
         <true/>
         <key>NSLocationWhenInUseUsageDescription</key>
         <string>Texas Watch needs your location to show registered sex offenders near you.</string>
+        <key>NSContactsUsageDescription</key>
+        <string>Texas Watch checks your contacts against the sex offender registry to help keep you informed.</string>
         <key>UIAppFonts</key>
         <array>
             <string>jetbrains_sans_bold.ttf</string>

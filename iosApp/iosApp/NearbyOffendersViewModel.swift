@@ -112,7 +112,8 @@ final class NearbyOffendersViewModel: NSObject, ObservableObject, CLLocationMana
     private func checkCurrentAuth() {
         let status = manager.authorizationStatus
         locationGranted = status == .authorizedWhenInUse || status == .authorizedAlways
-        if locationGranted {
+        // Only load if we have no data yet — avoids reload if VM is recreated while data exists
+        if locationGranted && offenders.isEmpty && !isLoading {
             isLoading = true
             isListLoading = true
             fetchPage(page: 0, resetList: true)

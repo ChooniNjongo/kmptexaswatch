@@ -20,6 +20,15 @@ data class OffenderSummary(
     val lon: Double? = null,
 )
 
+/** Returns the best available display name — falls back to firstName+lastName if fullName is blank or "Unknown". */
+val OffenderSummary.displayName: String get() {
+    if (fullName.isNotBlank() && !fullName.equals("Unknown", ignoreCase = true)) return fullName
+    val constructed = listOf(firstName, lastName)
+        .filter { it.isNotBlank() && !it.equals("Unknown", ignoreCase = true) }
+        .joinToString(" ")
+    return constructed.ifBlank { fullName }
+}
+
 // ── Paginated search response ────────────────────────────────────────────────
 
 @Serializable
@@ -160,4 +169,19 @@ data class MapOffender(
 data class RiskStats(
     @SerialName("lowAndModerateCount") val lowAndModerateCount: Int,
     @SerialName("highRiskCount")       val highRiskCount: Int
+)
+
+// ── Contact scan ─────────────────────────────────────────────────────────────
+
+@Serializable
+data class ContactMatchResult(
+    @SerialName("contactName") val contactName: String,
+    @SerialName("matches")     val matches: List<OffenderSummary>,
+)
+
+@Serializable
+data class ContactScanResponse(
+    @SerialName("results")              val results: List<ContactMatchResult>,
+    @SerialName("totalMatches")         val totalMatches: Int,
+    @SerialName("contactsWithMatches")  val contactsWithMatches: Int,
 )

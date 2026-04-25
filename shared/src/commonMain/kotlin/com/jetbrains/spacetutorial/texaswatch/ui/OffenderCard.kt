@@ -25,6 +25,7 @@ import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.jetbrains.spacetutorial.texaswatch.entity.OffenderSummary
+import com.jetbrains.spacetutorial.texaswatch.entity.displayName
 import com.jetbrains.spacetutorial.texaswatch.theme.TexasWatchTheme
 
 // ── Offender Card ─────────────────────────────────────────────────────────────
@@ -55,7 +56,7 @@ fun OffenderCard(
             )
             Column {
                 Text(
-                    text = offender.fullName,
+                    text = offender.displayName,
                     style = TexasWatchTheme.typography.h3,
                     color = colors.primaryText,
                 )

@@ -19,7 +19,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
+import com.jetbrains.spacetutorial.ContactScanScreen
 import com.jetbrains.spacetutorial.MapScreen
+import com.jetbrains.spacetutorial.OffenderDetailScreen
 import com.jetbrains.spacetutorial.OffendersSnapAndSearchScreen
 import com.jetbrains.spacetutorial.R
 import com.jetbrains.spacetutorial.RouteScreen
@@ -85,11 +88,13 @@ fun AppNavigation() {
         it.hasRoute(OnboardingPrivacyRoute::class) || it.hasRoute(OnboardingNotificationsRoute::class)
     } == true
     val isSearchScreen = currentDest?.hierarchy?.any { it.hasRoute(SearchRoute::class) } == true
+    val isOffenderDetail = currentDest?.hierarchy?.any { it.hasRoute(OffenderDetailRoute::class) } == true
+    val isContactScan = currentDest?.hierarchy?.any { it.hasRoute(ContactScanRoute::class) } == true
 
     Scaffold(
         containerColor = colors.mainBackground,
         bottomBar = {
-            if (!isSearchScreen && !isOnboardingScreen) {
+            if (!isSearchScreen && !isOnboardingScreen && !isOffenderDetail && !isContactScan) {
                 NavigationBar(
                     containerColor = colors.mainBackground,
                     contentColor = colors.primaryAccent,
@@ -161,20 +166,44 @@ fun AppNavigation() {
             }
             composable<OffendersRoute> {
                 OffendersSnapAndSearchScreen(
-                    onSearchClick = { navController.navigate(SearchRoute) }
+                    onSearchClick = { navController.navigate(SearchRoute) },
+                    onOffender = { indIdn, dist -> navController.navigate(OffenderDetailRoute(indIdn, dist ?: -1.0)) },
+                    onScanContacts = { navController.navigate(ContactScanRoute) },
                 )
             }
             composable<MapRoute> {
-                MapScreen()
+                MapScreen(
+                    onOffenderDetail = { indIdn -> navController.navigate(OffenderDetailRoute(indIdn)) }
+                )
             }
             composable<RouteRoute> {
-                RouteScreen()
+                RouteScreen(
+                    onOffenderDetail = { indIdn -> navController.navigate(OffenderDetailRoute(indIdn)) }
+                )
             }
             composable<SettingsRoute> {
                 SettingsScreen()
             }
             composable<SearchRoute> {
-                SearchScreen(onBack = { navController.popBackStack() })
+                SearchScreen(
+                    onBack = { navController.popBackStack() },
+                    onOffender = { navController.navigate(OffenderDetailRoute(it)) },
+                    onScanContacts = { navController.navigate(ContactScanRoute) },
+                )
+            }
+            composable<ContactScanRoute> {
+                ContactScanScreen(
+                    onBack = { navController.popBackStack() },
+                    onOffender = { navController.navigate(OffenderDetailRoute(it)) },
+                )
+            }
+            composable<OffenderDetailRoute> { backStackEntry ->
+                val route = backStackEntry.toRoute<OffenderDetailRoute>()
+                OffenderDetailScreen(
+                    indIdn = route.indIdn,
+                    distanceMiles = if (route.distanceMiles >= 0) route.distanceMiles else null,
+                    onBack = { navController.popBackStack() },
+                )
             }
         }
     }
